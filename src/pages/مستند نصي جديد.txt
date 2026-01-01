@@ -1,0 +1,126 @@
+import React, { useState, useEffect } from "react";
+import { API_URL } from "../config"; // رابط السيرفر
+import { Plus, Edit, Trash2 } from "lucide-react";
+
+export default function Sections() {
+  const [sections, setSections] = useState<any[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({ name: "", store_id: "", image: null as File | null });
+
+  useEffect(() => {
+    fetchSections();
+  }, []);
+
+  const fetchSections = async () => {
+    const res = await fetch(`${API_URL}/sections`);
+    const data = await res.json();
+    setSections(data);
+  };
+
+  const handleAddSection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = new FormData();
+    form.append("name", formData.name);
+    form.append("store_id", formData.store_id);
+    if (formData.image) form.append("image", formData.image);
+
+    const res = await fetch(`${API_URL}/sections`, {
+      method: "POST",
+      body: form
+    });
+    const result = await res.json();
+    if (result.success) {
+      setShowModal(false);
+      fetchSections();
+    } else {
+      alert(result.message);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("هل تريد حذف هذا القسم؟")) return;
+    await fetch(`${API_URL}/sections/${id}`, { method: "DELETE" });
+    fetchSections();
+  };
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-bold">الأقسام</h1>
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" /> إضافة قسم
+        </button>
+      </div>
+
+      <table className="w-full border">
+        <thead>
+          <tr className="bg-gray-200">
+            <th>الصورة</th>
+            <th>الاسم</th>
+            <th>المتجر</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sections.map((sec) => (
+            <tr key={sec.id} className="text-center border-b">
+              <td>
+                {sec.image_url && (
+                  <img src={`${API_URL}${sec.image_url}`} alt={sec.name} className="w-16 h-16 object-cover mx-auto" />
+                )}
+              </td>
+              <td>{sec.name}</td>
+              <td>{sec.store_name}</td>
+              <td className="flex justify-center gap-2">
+                <button className="text-blue-500"><Edit className="w-4 h-4" /></button>
+                <button onClick={() => handleDelete(sec.id)} className="text-red-500">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded w-96">
+            <h2 className="text-lg font-bold mb-4">إضافة قسم جديد</h2>
+            <form onSubmit={handleAddSection} className="space-y-4">
+              <input
+                type="text"
+                placeholder="اسم القسم"
+                className="border rounded p-2 w-full"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="ID المتجر"
+                className="border rounded p-2 w-full"
+                value={formData.store_id}
+                onChange={(e) => setFormData({ ...formData, store_id: e.target.value })}
+              />
+              <input
+                type="file"
+                className="border p-2 w-full"
+                onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border rounded">
+                  إلغاء
+                </button>
+                <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
+                  حفظ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
