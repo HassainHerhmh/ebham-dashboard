@@ -112,23 +112,29 @@ export default {
   /* ======================================================
      🧾 الطلبات
   ====================================================== */
-  orders: {
-    getOrders: (params?: { limit?: number }) =>
-      apiClient.get("/orders", { params }).then((res) => res.data),
+orders: {
+  // 🧾 جلب الطلبات (يدعم limit + sort)
+  getOrders: (params?: { limit?: number; sort?: "asc" | "desc" }) =>
+    apiClient.get("/orders", { params }).then((res) => res.data),
 
-    getOrderDetails: (orderId: number) =>
-      apiClient.get(`/orders/${orderId}/details`).then((res) => res.data),
+  // 📦 تفاصيل طلب
+  getOrderDetails: (orderId: number) =>
+    apiClient.get(`/orders/${orderId}/details`).then((res) => res.data),
 
-    assignCaptain: (orderId: number, captainId: number) =>
-      apiClient
-        .put(`/orders/${orderId}/assign-captain`, { captain_id: captainId })
-        .then((res) => res.data),
+  // 🚗 تعيين كابتن
+  assignCaptain: (orderId: number, captainId: number) =>
+    apiClient
+      .put(`/orders/${orderId}/assign-captain`, {
+        captain_id: captainId,
+      })
+      .then((res) => res.data),
 
-    updateStatus: (orderId: number, status: string) =>
-      apiClient
-        .put(`/orders/${orderId}/status`, { status })
-        .then((res) => res.data),
-  },
+  // 🔄 تحديث حالة الطلب
+  updateStatus: (orderId: number, status: string) =>
+    apiClient
+      .put(`/orders/${orderId}/status`, { status })
+      .then((res) => res.data),
+},
 
   /* ======================================================
      🚗 الكباتن
@@ -324,6 +330,23 @@ paymentMethods: {
     apiClient
       .patch(`/payment-methods/${id}/toggle`, { is_active })
       .then(res => res.data),
+
+  // ✅ الإضافة الناقصة (سبب الخطأ)
+  reorder: (data: {
+    orders: {
+      id: number;
+      sort_order: number;
+    }[];
+  }) =>
+    apiClient
+      .post("/payment-methods/reorder", data)
+      .then(res => res.data),
+
+  // (لو كنت تحتاجها)
+  getLogs: (methodId: number, days?: number) =>
+    apiClient.get(`/payment-methods/${methodId}/logs`, {
+      params: days ? { days } : undefined,
+    }).then(res => res.data),
 },
 
    /* ======================================================
@@ -811,6 +834,97 @@ journalEntries: {
   // حذف قيد
   delete: (id: number) =>
     apiClient.delete(`/journal-entries/${id}`).then(res => res.data),
+},
+
+
+
+/* ======================================================
+   👤 Agent Info
+====================================================== */
+ agentInfo: {
+    getAll: () =>
+      apiClient.get("/agent-info").then((r) => r.data),
+
+    getOne: (id: number) =>
+      apiClient.get(`/agent-info/${id}`).then((r) => r.data),
+
+    add: (data: any) =>
+      apiClient.post("/agent-info", data).then((r) => r.data),
+
+    update: (id: number, data: any) =>
+      apiClient.put(`/agent-info/${id}`, data).then((r) => r.data),
+
+    delete: (id: number) =>
+      apiClient.delete(`/agent-info/${id}`).then((r) => r.data),
+  },
+
+/* ======================================================
+   📊 Dashboard
+====================================================== */
+dashboard: {
+  getStats: () =>
+    apiClient.get("/dashboard/stats").then(res => res.data),
+
+  getCharts: () =>
+    apiClient.get("/dashboard/charts").then(res => res.data),
+},
+
+/* ======================================================
+   💳 Payment Settings
+====================================================== */
+paymentSettings: {
+  getAll: () =>
+    apiClient.get("/payment-settings").then(res => res.data),
+
+  update: (data: any) =>
+    apiClient.put("/payment-settings", data).then(res => res.data),
+},
+
+/* ======================================================
+   🏬 Stores Settings
+====================================================== */
+storeSettings: {
+  getAll: () =>
+    apiClient.get("/store-settings").then(res => res.data),
+
+  update: (data: any) =>
+    apiClient.put("/store-settings", data).then(res => res.data),
+},
+
+/* ======================================================
+   💱 Setup - Currencies
+====================================================== */
+setupCurrencies: {
+  getAll: () =>
+    apiClient.get("/currencies").then(res => res.data),
+},
+
+/* ======================================================
+     📊 Reports  ✅ (هذا سبب خطأ Dashboard)
+  ====================================================== */
+  reports: {
+    getSalesReport: () =>
+      apiClient.get("/reports/sales").then((r) => r.data),
+
+    getOrdersReport: () =>
+      apiClient.get("/reports/orders").then((r) => r.data),
+  },
+  
+  stores: {
+  getStores: () =>
+    apiClient.get("/stores").then(res => res.data),
+
+  getStore: (id: number) =>
+    apiClient.get(`/stores/${id}`).then(res => res.data),
+
+  addStore: (data: any) =>
+    apiClient.post("/stores", data).then(res => res.data),
+
+  updateStore: (id: number, data: any) =>
+    apiClient.put(`/stores/${id}`, data).then(res => res.data),
+
+  deleteStore: (id: number) =>
+    apiClient.delete(`/stores/${id}`).then(res => res.data),
 },
 
 

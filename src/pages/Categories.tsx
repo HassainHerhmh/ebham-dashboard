@@ -101,6 +101,7 @@ const Categories: React.FC = () => {
       setEditImage(null);
       setIsEditSidebarOpen(false);
       fetchCategories();
+      
     }
   };
 
@@ -142,19 +143,20 @@ const Categories: React.FC = () => {
                   "-"
                 )}
               </td>
-              <td className="border p-2 text-center">
-                {cat.image_url ? (
-                  <img
-                    src={`http://localhost:5000${cat.image_url}`}
-                    alt={cat.name}
-                    width={60}
-                    height={60}
-                    className="object-cover rounded"
-                  />
-                ) : (
-                  "بدون صورة"
-                )}
-              </td>
+             <td className="border p-2 text-center">
+  {cat.image_url || (cat as any).image ? (
+    <img
+      src={`http://localhost:5000${cat.image_url || (cat as any).image}`}
+      alt={cat.name}
+      width={60}
+      height={60}
+      className="object-cover rounded"
+    />
+  ) : (
+    "بدون صورة"
+  )}
+</td>
+ 
               <td className="border p-2 text-center flex gap-2 justify-center">
                 <button
                   onClick={() => {
@@ -242,8 +244,10 @@ const SidebarForm: React.FC<SidebarProps> = ({
   setDescription,
   iconUrl,
   setIconUrl,
+  image,
   setImage,
 }) => {
+
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-40 z-40" onClick={onClose}></div>

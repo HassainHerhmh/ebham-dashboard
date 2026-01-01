@@ -84,15 +84,17 @@ const Currencies = () => {
       return;
     }
 
-    const payload = {
-      name_ar: form.name_ar,
-      code: form.code,
-      symbol: form.symbol,
-      exchange_rate: Number(form.exchange_rate),
-      min_rate: form.min_rate ? Number(form.min_rate) : null,
-      max_rate: form.max_rate ? Number(form.max_rate) : null,
-      is_local: form.is_local ? 1 : 0,
-    };
+const payload = {
+  name_ar: form.name_ar,
+  code: form.code,
+  symbol: form.symbol,
+  exchange_rate: Number(form.exchange_rate),
+  min_rate: form.min_rate ? Number(form.min_rate) : null,
+  max_rate: form.max_rate ? Number(form.max_rate) : null,
+ is_local: Boolean(form.is_local),
+
+};
+
 
     try {
       if (editId) {
