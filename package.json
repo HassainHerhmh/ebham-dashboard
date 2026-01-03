@@ -8,7 +8,8 @@
   },
   "scripts": {
      "dev": "node node_modules/vite/bin/vite.js",
-    "build": "node node_modules/vite/bin/vite.js build",
+     "start": "node server.js",
+    "build": "npm install",
     "preview": "node node_modules/vite/bin/vite.js preview"
   },
   "dependencies": {
