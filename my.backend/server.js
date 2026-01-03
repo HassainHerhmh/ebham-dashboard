@@ -20,9 +20,7 @@ console.log("🔥 SERVER VERSION 2026-01-02 🔥");
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  if (
-    origin === "https://ebham-dashboard-gcpu.vercel.app"
-  ) {
+  if (origin === "https://ebham-dashboard-gcpu.vercel.app") {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
 
@@ -35,16 +33,12 @@ app.use((req, res, next) => {
     "Content-Type, Authorization, x-user-role"
   );
 
-  // ❌ لا credentials (لأنك لا تستخدم cookies)
-  // res.setHeader("Access-Control-Allow-Credentials", "true");
-
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
 
   next();
 });
-
 
 /* ======================================================
    🧠 Middlewares
@@ -66,23 +60,20 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
    🖼️ Multer (رفع الصور)
 ====================================================== */
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) =>
     cb(
       null,
       Date.now() +
         "-" +
         Math.round(Math.random() * 1e9) +
         path.extname(file.originalname)
-    );
-  },
+    ),
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 /* ======================================================
@@ -99,7 +90,6 @@ const db = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
-
 
 /* ======================================================
    🔐 LOGIN
@@ -149,7 +139,7 @@ app.post("/login", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("LOGIN ERROR:", err);
+    console.error("LOGIN ERROR 🔥:", err);
     res.status(500).json({
       success: false,
       message: "❌ Server Error",
