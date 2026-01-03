@@ -15,10 +15,22 @@ const app = express();
 console.log("🔥 SERVER VERSION 2026-01-02 🔥");
 
 /* ======================================================
-   🌐 CORS (FINAL & CORRECT)
+   🌐 CORS (Railway SAFE FINAL)
 ====================================================== */
-const corsOptions = {
-  origin: "https://ebham-dashboard-gcpu.vercel.app",
+app.use(cors({
+  origin: (origin, callback) => {
+    // السماح لـ Vercel وأي origin موثوق
+    if (!origin) return callback(null, true);
+
+    if (
+      origin.includes("vercel.app") ||
+      origin.includes("localhost")
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
@@ -26,10 +38,9 @@ const corsOptions = {
     "Authorization",
     "x-user-role"
   ],
-};
+}));
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options("*", cors());
 
 /* ======================================================
    🧠 Middlewares
