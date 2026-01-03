@@ -40,8 +40,6 @@ const corsOptions = {
   ],
 };
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
 /* ======================================================
    🌐 FORCE CORS HEADERS (FINAL GUARANTEED FIX)
