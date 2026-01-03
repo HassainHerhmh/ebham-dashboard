@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api"; // عدّل المسار إذا مختلف
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -21,30 +22,32 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
+      const res = await api.post("/login", {
+        identifier,
+        password,
       });
 
-      const data = await res.json();
+      const data = res.data;
       console.log("Login response:", data);
 
       if (!data.success) {
         setError(data.message || "❌ خطأ في تسجيل الدخول");
-      } else {
-        // حفظ بيانات المستخدم في التخزين المحلي بما فيها الصلاحيات
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        // 🔄 إعلام باقي أجزاء التطبيق بتحديث الحالة
-        window.dispatchEvent(new Event("storage"));
-
-        alert("✅ تم تسجيل الدخول بنجاح");
-        navigate("/", { replace: true });
+        return;
       }
-    } catch (err) {
-      console.error("❌ خطأ:", err);
-      setError("❌ فشل الاتصال بالسيرفر");
+
+      // حفظ بيانات المستخدم
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // إعلام باقي أجزاء التطبيق
+      window.dispatchEvent(new Event("storage"));
+
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      console.error("❌ Login error:", err);
+      setError(
+        err?.response?.data?.message ||
+        "❌ فشل الاتصال بالسيرفر"
+      );
     } finally {
       setLoading(false);
     }
@@ -56,7 +59,9 @@ const Login: React.FC = () => {
         onSubmit={handleSubmit}
         className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md"
       >
-        <h1 className="text-2xl font-bold text-center mb-6">تسجيل الدخول</h1>
+        <h1 className="text-2xl font-bold text-center mb-6">
+          تسجيل الدخول
+        </h1>
 
         {error && (
           <div className="bg-red-100 text-red-700 p-2 rounded mb-4 text-center">
@@ -79,7 +84,9 @@ const Login: React.FC = () => {
         </div>
 
         <div className="mb-6">
-          <label className="block mb-1 text-right font-medium">كلمة المرور</label>
+          <label className="block mb-1 text-right font-medium">
+            كلمة المرور
+          </label>
           <input
             type="password"
             value={password}
