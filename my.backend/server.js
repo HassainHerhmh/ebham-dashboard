@@ -15,56 +15,27 @@ const app = express();
 console.log("🔥 SERVER VERSION 2026-01-02 🔥");
 
 /* ======================================================
-   🌐 CORS (FINAL – FIXED)
-====================================================== */
-const corsOptions = {
-  origin: (origin, callback) => {
-    // السماح للطلبات بدون origin (mobile / postman)
-    if (!origin) return callback(null, true);
-
-    if (
-      origin.includes("vercel.app") ||
-      origin.includes("localhost")
-    ) {
-      return callback(null, true);
-    }
-
-    return callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "x-user-role"
-  ],
-};
-
-
-/* ======================================================
-   🌐 FORCE CORS HEADERS (FINAL GUARANTEED FIX)
+   🌐 FORCE CORS HEADERS (FINAL – ONLY ONE)
 ====================================================== */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  if (
-    origin === "https://ebham-dashboard-gcpu.vercel.app"
-  ) {
-    res.header("Access-Control-Allow-Origin", origin);
+  // السماح فقط للواجهة
+  if (origin === "https://ebham-dashboard-gcpu.vercel.app") {
+    res.setHeader("Access-Control-Allow-Origin", origin);
   }
 
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-  );
-  res.header(
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.setHeader(
     "Access-Control-Allow-Headers",
     "Content-Type, Authorization, x-user-role"
   );
 
+  // ⚠️ لا نستخدم credentials الآن
+  // لأنك لا ترسل cookies أصلاً
+
   if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
+    return res.sendStatus(200);
   }
 
   next();
