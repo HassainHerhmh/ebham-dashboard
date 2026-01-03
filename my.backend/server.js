@@ -15,11 +15,11 @@ const app = express();
 console.log("🔥 SERVER VERSION 2026-01-02 🔥");
 
 /* ======================================================
-   🌐 CORS (Railway SAFE FINAL)
+   🌐 CORS (FINAL – FIXED)
 ====================================================== */
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
-    // السماح لـ Vercel وأي origin موثوق
+    // السماح للطلبات بدون origin (mobile / postman)
     if (!origin) return callback(null, true);
 
     if (
@@ -38,9 +38,10 @@ app.use(cors({
     "Authorization",
     "x-user-role"
   ],
-}));
+};
 
-app.options("*", cors());
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 /* ======================================================
    🧠 Middlewares
