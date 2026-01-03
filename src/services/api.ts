@@ -1,9 +1,10 @@
 import axios from "axios";
 
 /* =========================
-   🔗 Base URL (Vite)
+   🔗 Base URL (Vercel + Railway)
 ========================= */
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL as string;
+
 
 /* =========================
    🟢 Axios Instance
@@ -16,99 +17,51 @@ const apiClient = axios.create({
 });
 
 /* =========================
-   🟢 Interceptor
+   🟢 Request Interceptor (مرة واحدة فقط)
 ========================= */
 apiClient.interceptors.request.use((config) => {
   const userStr = localStorage.getItem("user");
   if (userStr) {
     try {
       const user = JSON.parse(userStr);
-      if (user.token) {
+
+      if (user?.token) {
         config.headers.Authorization = `Bearer ${user.token}`;
       }
-      if (user.role) {
+
+      if (user?.role) {
         config.headers["x-user-role"] = user.role;
       }
-    } catch {}
+    } catch (err) {
+      console.warn("Invalid user in localStorage");
+    }
   }
   return config;
 });
 
 /* =========================
-   🧠 API Facade (نفس شغلك)
+   🔴 Response Interceptor
+========================= */
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error(
+      "❌ API Error:",
+      error?.response?.data || error.message
+    );
+    return Promise.reject(error);
+  }
+);
+
+/* =========================
+   🧠 API Export (واحد فقط)
 ========================= */
 const api = {
   get: apiClient.get,
   post: apiClient.post,
   put: apiClient.put,
-  delete: apiClient.delete,
-
-  orders: {
-    getOrders: (params?: any) =>
-      apiClient.get("/orders", { params }).then(res => res.data),
-
-    getOrderDetails: (id: number) =>
-      apiClient.get(`/orders/${id}`).then(res => res.data),
-
-    assignCaptain: (orderId: number, captainId: number) =>
-      apiClient.post(`/orders/${orderId}/assign-captain`, { captain_id: captainId }),
-
-    updateStatus: (orderId: number, status: string) =>
-      apiClient.put(`/orders/${orderId}/status`, { status }),
-  },
-
-  captains: {
-    getAvailableCaptains: () =>
-      apiClient.get("/captains").then(res => res.data),
-  },
-};
-
-
-
-/* ======================================================
-   🟢 Interceptor: إرسال بيانات المستخدم مع كل طلب
-====================================================== */
-apiClient.interceptors.request.use((config) => {
-  const userStr = localStorage.getItem("user");
-
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr);
-
-      if (user.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
-      }
-
-      if (user.role) {
-        config.headers["x-user-role"] = user.role;
-      }
-    } catch {
-      console.warn("Failed to parse user from localStorage");
-    }
-  }
-
-  return config;
-});
-
-/* ======================================================
-   🟢 Interceptor: الأخطاء
-====================================================== */
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("❌ API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
-
-export default {
-  // ===== دوال عامة =====
-  get: apiClient.get,
-  post: apiClient.post,
-  put: apiClient.put,
   patch: apiClient.patch,
   delete: apiClient.delete,
-
   /* ======================================================
      🧾 الطلبات
   ====================================================== */
@@ -929,3 +882,6 @@ setupCurrencies: {
 
 
 };
+
+export default api;
+
