@@ -97,6 +97,20 @@ const db = new Pool({
 });
 
 /* ======================================================
+   🟢 FIX: Explicit OPTIONS handler (CRITICAL)
+====================================================== */
+app.options("/login", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "https://ebham-dashboard-gcpu.vercel.app");
+  res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, x-user-role"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+  return res.sendStatus(204);
+});
+
+/* ======================================================
    🔐 LOGIN
 ====================================================== */
 app.post("/login", async (req, res) => {
