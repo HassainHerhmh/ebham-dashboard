@@ -10,82 +10,133 @@ import pkg from "pg";
 dotenv.config();
 
 const { Pool } = pkg;
-
 const app = express();
-app.use(cors());
+
+console.log("🔥 SERVER VERSION 2026-01-02 🔥");
+
+/* ======================================================
+   🌐 CORS (صحيح بدون مشاكل path-to-regexp)
+====================================================== */
+app.use(cors({
+  origin: "https://ebham-dashboard-gcpu.vercel.app",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
+
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
+/* ======================================================
+   🧠 Middlewares
+====================================================== */
 app.use(express.json());
 
-// ===============================
-// 📁 إعداد مجلد رفع الملفات
-// ===============================
+/* ======================================================
+   📁 Paths
+====================================================== */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/* ======================================================
+   📂 Static uploads
+====================================================== */
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ===============================
-// 🗄️ الاتصال بقاعدة Supabase PostgreSQL
-// ===============================
+/* ======================================================
+   🖼️ Multer (رفع الصور) ✅ مهم
+====================================================== */
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(
+      null,
+      Date.now() +
+        "-" +
+        Math.round(Math.random() * 1e9) +
+        path.extname(file.originalname)
+    );
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
+/* ======================================================
+   🧪 Health Check
+====================================================== */
+app.get("/", (req, res) => {
+  res.json({ success: true, message: "API IS WORKING 🚀" });
+});
+
+/* ======================================================
+   🗄️ Database (Supabase PostgreSQL)
+====================================================== */
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // مهم لـ Supabase
+  ssl: { rejectUnauthorized: false },
 });
 
-db.connect()
-  .then(() => console.log("✅ Connected to Supabase PostgreSQL (Session Pooler)"))
-  .catch((err) => console.error("❌ Database connection error:", err));
-
-// ===============================
-// 🖼️ إعداد رفع الصور
-// ===============================
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + path.extname(file.originalname)),
-});
-
-const upload = multer({ storage });
-
-
-/* ============================================================================
-   🔐 تسجيل الدخول - تعديل لإرجاع الصلاحيات
-============================================================================ */
-/* تسجيل الدخول */
+/* ======================================================
+   🔐 LOGIN
+====================================================== */
 app.post("/login", async (req, res) => {
   try {
     const { identifier, password } = req.body;
+
     if (!identifier || !password) {
-      return res.status(400).json({ success: false, message: "❌ البريد أو الجوال وكلمة المرور مطلوبة" });
+      return res.status(400).json({
+        success: false,
+        message: "❌ البيانات غير مكتملة"
+      });
     }
 
-    const [rows] = await db.query("SELECT * FROM users WHERE email = ? OR phone = ?", [identifier, identifier]);
-    if (!rows.length) {
-      return res.status(404).json({ success: false, message: "❌ المستخدم غير موجود" });
+    const result = await db.query(
+      "SELECT * FROM users WHERE email = $1 OR phone = $1 LIMIT 1",
+      [identifier]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "❌ المستخدم غير موجود"
+      });
     }
 
-    const user = rows[0];
-    const isMatch = await bcrypt.compare(password, user.password).catch(() => false);
-    if (!isMatch && user.password !== password) {
-      return res.status(401).json({ success: false, message: "❌ كلمة المرور غير صحيحة" });
-    }
-    if (user.status === "inactive") {
-      return res.status(403).json({ success: false, message: "❌ الحساب معطل" });
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "❌ كلمة المرور غير صحيحة"
+      });
     }
 
     res.json({
       success: true,
-      message: "✅ تسجيل الدخول ناجح",
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         role: user.role,
-        status: user.status,
-        permissions: user.permissions ? JSON.parse(user.permissions) : []
+        permissions: user.permissions || []
       }
     });
+
   } catch (err) {
-    res.status(500).json({ success: false, message: "❌ خطأ في السيرفر" });
+    console.error("LOGIN ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "❌ Server Error"
+    });
   }
 });
 /* ============================================================================
@@ -5846,10 +5897,7 @@ app.delete("/journal-entries/:referenceId", async (req, res) => {
 /* ============================================================================
    تشغيل السيرفر
 ============================================================================ */
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 السيرفر شغال على المنفذ ${PORT}`));
-
-// 🔴 Global Error Handler (مهم للتشخيص)
+// 🔴 Global Error Handler (لازم قبل listen)
 app.use((err, req, res, next) => {
   console.error("SERVER ERROR 🔥:", err);
   res.status(500).json({
@@ -5857,3 +5905,10 @@ app.use((err, req, res, next) => {
     message: err.message || "Server Error",
   });
 });
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 السيرفر شغال على المنفذ ${PORT}`);
+});
+
+
