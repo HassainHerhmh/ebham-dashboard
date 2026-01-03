@@ -15,27 +15,31 @@ const app = express();
 console.log("🔥 SERVER VERSION 2026-01-02 🔥");
 
 /* ======================================================
-   🌐 FORCE CORS HEADERS (FINAL – ONLY ONE)
+   🌐 FORCE CORS HEADERS (FINAL – STABLE)
 ====================================================== */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  // السماح فقط للواجهة
-  if (origin === "https://ebham-dashboard-gcpu.vercel.app") {
+  if (
+    origin === "https://ebham-dashboard-gcpu.vercel.app"
+  ) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
 
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+  );
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Content-Type, Authorization, x-user-role"
   );
 
-  // ⚠️ لا نستخدم credentials الآن
-  // لأنك لا ترسل cookies أصلاً
+  // ❌ لا credentials (لأنك لا تستخدم cookies)
+  // res.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
+    return res.sendStatus(204);
   }
 
   next();
@@ -96,19 +100,6 @@ const db = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-/* ======================================================
-   🟢 FIX: Explicit OPTIONS handler (CRITICAL)
-====================================================== */
-app.options("/login", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "https://ebham-dashboard-gcpu.vercel.app");
-  res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-user-role"
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
-  return res.sendStatus(204);
-});
 
 /* ======================================================
    🔐 LOGIN
