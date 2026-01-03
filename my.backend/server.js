@@ -15,19 +15,21 @@ const app = express();
 console.log("🔥 SERVER VERSION 2026-01-02 🔥");
 
 /* ======================================================
-   🌐 CORS (صحيح بدون مشاكل path-to-regexp)
+   🌐 CORS (FINAL & CORRECT)
 ====================================================== */
-app.use(cors({
+const corsOptions = {
   origin: "https://ebham-dashboard-gcpu.vercel.app",
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
-}));
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "x-user-role"
+  ],
+};
 
-app.use((req, res, next) => {
-  if (req.method === "OPTIONS") return res.sendStatus(204);
-  next();
-});
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 /* ======================================================
    🧠 Middlewares
@@ -46,7 +48,7 @@ const __dirname = path.dirname(__filename);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* ======================================================
-   🖼️ Multer (رفع الصور) ✅ مهم
+   🖼️ Multer (رفع الصور)
 ====================================================== */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -93,7 +95,7 @@ app.post("/login", async (req, res) => {
     if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: "❌ البيانات غير مكتملة"
+        message: "❌ البيانات غير مكتملة",
       });
     }
 
@@ -105,7 +107,7 @@ app.post("/login", async (req, res) => {
     if (!result.rows.length) {
       return res.status(404).json({
         success: false,
-        message: "❌ المستخدم غير موجود"
+        message: "❌ المستخدم غير موجود",
       });
     }
 
@@ -115,7 +117,7 @@ app.post("/login", async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: "❌ كلمة المرور غير صحيحة"
+        message: "❌ كلمة المرور غير صحيحة",
       });
     }
 
@@ -127,18 +129,18 @@ app.post("/login", async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
-        permissions: user.permissions || []
-      }
+        permissions: user.permissions || [],
+      },
     });
-
   } catch (err) {
     console.error("LOGIN ERROR:", err);
     res.status(500).json({
       success: false,
-      message: "❌ Server Error"
+      message: "❌ Server Error",
     });
   }
 });
+
 /* ============================================================================
    الطلبات
 ============================================================================ */
