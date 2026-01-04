@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api"; // عدّل المسار إذا مختلف
+import api from "../services/api";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -9,13 +9,6 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ إذا المستخدم مسجل مسبقًا → توجه مباشرة للصفحة الرئيسية
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) navigate("/");
-  }, [navigate]);
-
-  // ✅ إرسال بيانات تسجيل الدخول
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -28,88 +21,39 @@ const Login: React.FC = () => {
       });
 
       const data = res.data;
-      console.log("Login response:", data);
 
       if (!data.success) {
-        setError(data.message || "❌ خطأ في تسجيل الدخول");
+        setError(data.message);
         return;
       }
 
-      // حفظ بيانات المستخدم
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      // إعلام باقي أجزاء التطبيق
-      window.dispatchEvent(new Event("storage"));
-
-      navigate("/", { replace: true });
+      navigate("/");
     } catch (err: any) {
-      console.error("❌ Login error:", err);
-      setError(
-        err?.response?.data?.message ||
-        "❌ فشل الاتصال بالسيرفر"
-      );
+      setError("فشل الاتصال بالسيرفر");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md"
-      >
-        <h1 className="text-2xl font-bold text-center mb-6">
-          تسجيل الدخول
-        </h1>
-
-        {error && (
-          <div className="bg-red-100 text-red-700 p-2 rounded mb-4 text-center">
-            {error}
-          </div>
-        )}
-
-        <div className="mb-4">
-          <label className="block mb-1 text-right font-medium">
-            البريد الإلكتروني أو رقم الجوال
-          </label>
-          <input
-            type="text"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-right focus:ring focus:ring-blue-200"
-            placeholder="example@mail.com أو 05XXXXXXXX"
-            required
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="block mb-1 text-right font-medium">
-            كلمة المرور
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-right focus:ring focus:ring-blue-200"
-            placeholder="أدخل كلمة المرور"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-        >
-          {loading ? "جاري التحقق..." : "تسجيل الدخول"}
-        </button>
-
-        <p className="text-center text-sm text-gray-500 mt-3">
-          © {new Date().getFullYear()} جميع الحقوق محفوظة
-        </p>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit}>
+      <input
+        placeholder="البريد أو الجوال"
+        value={identifier}
+        onChange={(e) => setIdentifier(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="كلمة المرور"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      {error && <p>{error}</p>}
+      <button disabled={loading}>
+        {loading ? "جاري..." : "دخول"}
+      </button>
+    </form>
   );
 };
 
